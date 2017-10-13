@@ -10,6 +10,11 @@ typedef struct bmpImportantInfo{
 	DWORD sizeOfPixelData;
 };
 
+typedef enum FLIP_enum_t {
+	VER = 1,
+	HOR = 0
+};
+
 void yyFlip(CHAR* fileIter) {
 
 	DWORD pixelDataOffset = *(DWORD*)(fileIter + 10);
@@ -19,10 +24,9 @@ void yyFlip(CHAR* fileIter) {
 
 	CHAR* pixelDataBase = fileIter + pixelDataOffset;
 
-	//number of bytes used in representing a pixel
 	DWORD bytesPerPixel = (bitsPerPixel / 8);
 
-	//offset from the first pixel
+	//offset from the start of the pixel data
 	DWORD lastPixelInRowOffset = bytesPerPixel * widthOfBitmapInPixels - bytesPerPixel;
 
 	DWORD padding = 0;
@@ -48,13 +52,11 @@ void yyFlip(CHAR* fileIter) {
 			*(DWORD*)rightPixelIter = (*(DWORD*)rightPixelIter & pixelWriteMask) | leftAux;
 
 			leftPixelIter += bytesPerPixel;
-			rightPixelIter -= bytesPerPixel;
-
+			rightPixelIter -= bytesPerPixel;	
 		}
-
 		rowIter += bytesPerRow;
 	}
-
+	printf("Flip executed on yy axis! \n");
 }
 
 void xxFlip(CHAR* fileIter) {
@@ -65,7 +67,6 @@ void xxFlip(CHAR* fileIter) {
 
 	CHAR* pixelDataBase = fileIter + pixelDataOffset;
 
-	//number of bytes used in representing a pixel
 	DWORD bytesPerPixel = (bitsPerPixel / 8);
 
 	DWORD lastPixelInRowOffset = bytesPerPixel * widthOfBitmapInPixels - bytesPerPixel;
@@ -95,30 +96,46 @@ void xxFlip(CHAR* fileIter) {
 			topRowIter -= bytesPerRow;
 		}
 	}
+	printf("Flip executed on xx axis! \n");
 }
 
-void bmpRotate(LPCWSTR fileNameIn, LPCWSTR fileNameOut, LPCWSTR rotation) {
-	HANDLE fileHandle = CreateFile(fileNameIn, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, NULL, NULL);
+void bmpRotate(LPCWSTR fileNameIn, LPCWSTR fileNameOut, FLIP_enum_t axis) {
+
+	CopyFile(fileNameIn,fileNameOut,FALSE);
+	HANDLE fileHandle = CreateFile(fileNameOut, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, NULL, NULL);
 	HANDLE fileMappingHandle = CreateFileMapping(fileHandle, NULL, PAGE_READWRITE, 0, 0, fileNameIn);
 	LPVOID fileView = MapViewOfFile(fileMappingHandle, FILE_MAP_ALL_ACCESS, 0, 0, 0);
 	
 	CHAR* fileIter = (CHAR*)fileView;
 	CHAR* bmpIdentifier = (CHAR*)fileIter;
+	WORD bmpBitsPerPixel = *(WORD*)(fileIter+28);
+
 	if (*bmpIdentifier != 'B' && *(bmpIdentifier + 1)!= 'M') {
+		DeleteFile(fileNameOut);
 		printf("Not a .bmp image!");
 		return;
 	}
 
-	
-	//yyFlip(fileIter);
-	//xxFlip(fileIter);
+	if (bmpBitsPerPixel != 24) {
+		DeleteFile(fileNameOut);
+		printf("Pixel encoding is not 24bit!");
+		return;
+	}
 
-	
+	if (axis == HOR)
+		xxFlip(fileIter);
+
+	if (axis == VER)
+		yyFlip(fileIter);
+
+	UnmapViewOfFile(fileView);
+	CloseHandle(fileMappingHandle);
+	CloseHandle(fileHandle);
 	system("pause");
 }
 
 int main() {
-	bmpRotate(_T("Blade_Runner_Galileu.bmp"),_T("Blade_Runner_Galileu_flipped.bmp"),_T("vertical"));
+	bmpRotate(_T("Blade_Runner_Galileu.bmp"),_T("Blade_Runner_Galileu_Flipped.bmp"),VER);
 	return 1;
 }
 
