@@ -1,0 +1,5 @@
+﻿  BMPFlip.cpp
+c:\users\rafael\documents\trabalhos\so\so1\so1\bmpflip.cpp(11): warning C4091: 'typedef ': ignored on left of 'bmpImportantInfo' when no variable is declared
+c:\users\rafael\documents\trabalhos\so\so1\so1\bmpflip.cpp(49): warning C4018: '<': signed/unsigned mismatch
+  SO1.vcxproj -> C:\Users\Rafael\Documents\TRABALHOS\SO\SO1\Debug\SO1.exe
+  SO1.vcxproj -> C:\Users\Rafael\Documents\TRABALHOS\SO\SO1\Debug\SO1.pdb (Partial PDB)
